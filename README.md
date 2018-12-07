@@ -4,6 +4,8 @@ Most AVR for .NET ASP.NET Websites need an ASNA DataGate Database Name created o
 
 This utility lets you create, delete, or list DataGate Database Names for use with the IBM i.
 
+>You must use a DOS command line opened with administrative rights to use this utility.
+
 ### Command line usage: 
 
 To show top-level options:
