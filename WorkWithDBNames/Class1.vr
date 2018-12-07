@@ -6,8 +6,8 @@ Using System.Collections.Specialized
 
 BegClass Program
 
-	BegSr Main Shared(*Yes) Access(*Public) Attributes(System.STAThread())
-		DclSrParm args Type(*String) Rank(1)
+    BegSr Main Shared(*Yes) Access(*Public) Attributes(System.STAThread())
+        DclSrParm args Type(*String) Rank(1)
 
         DclFld addName Type(AddDBName) New() 
         DclFld listNames Type(ListORDeleteDBName) New() 
@@ -30,7 +30,7 @@ BegClass Program
             listNames.test(args)
 
         EndIf 
-	EndSr
+    EndSr
 
     BegSr ShowMainHelp Shared(*Yes) 
         Console.WriteLine('---------------') 
@@ -58,9 +58,9 @@ EndClass
 
 BegClass TestClasses
 
-	BegSr Run Access(*Public) 
+    BegSr Run Access(*Public) 
 
-	EndSr
+    EndSr
 
 EndClass
 
@@ -179,7 +179,7 @@ BegClass AddDBName Access(*Public)
     
     DclConst ARG_COUNT_SHOULD_BE Value(8)  
 
-	BegSr Create Access(*Public) 
+    BegSr Create Access(*Public) 
         DclSrParm args Type(*String) Rank(1) 
 
         If args.Length = 1 OR args[1].ToLower() = '--help' OR  args[1] = '?'
@@ -212,10 +212,10 @@ BegClass AddDBName Access(*Public)
                 Console.WriteLine(ex.Message) 
             EndTry             
         EndIf 
-	EndSr
+    EndSr
     
     BegFunc ValidationErrors Type(*Boolean)
-		DclSrParm args Type(*String) Rank(1)
+        DclSrParm args Type(*String) Rank(1)
 
         DclFld Errors Type(StringCollection) New() 
         DclFld HasErrors Type(*Boolean) Inz(*False) 
