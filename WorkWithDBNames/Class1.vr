@@ -26,12 +26,10 @@ BegClass Program
         ElseIf args[0].ToLower() = 'delete'
             listNames.delete(args)
 
+        ElseIf args[0].ToLower() = 'test'
+            listNames.test(args)
+
         EndIf 
-
-
-
-		//Console.WriteLine('Press any key to continue...') 
-		//Console.ReadKey()
 	EndSr
 
     BegSr ShowMainHelp Shared(*Yes) 
@@ -42,7 +40,7 @@ BegClass Program
         Console.WriteLine('   WorkWithDBNames LIST')  
         Console.WriteLine('') 
         Console.WriteLine('Usage to CREATE a database name:') 
-        Console.WriteLine('   WorkWithDBNames CREATE DBName Server Label User Password PoolingTime') 
+        Console.WriteLine('   WorkWithDBNames CREATE DBName Server Label User Password PoolingTime Port') 
         Console.WriteLine('Or') 
         Console.WriteLine('   WorkWithDBNames CREATE --help') 
         Console.WriteLine('') 
@@ -50,6 +48,9 @@ BegClass Program
         Console.WriteLine('   WorkWithDBNames DELETE DBName')  
         Console.WriteLine('Or') 
         Console.WriteLine('   WorkWithDBNames DELETE --help') 
+        Console.WriteLine('') 
+        Console.WriteLine('Usage to TEST a database name:') 
+        Console.WriteLine('   WorkWithDBNames TEST DBName')  
     EndSr
     
 EndClass
@@ -68,6 +69,37 @@ BegClass ListORDeleteDBName Access(*Public)
     DclConst DBNAME Value(1) 
 
     DclDB DGDB 
+
+    BegSr Test Access(*Public) 
+        DclSrParm args Type(*String) Rank(1) 
+
+        If  args.Length = 1 OR args[1].ToLower() = '--help' OR args[1] = '?' 
+            ShowTestDBNameHelp()
+            LeaveSr 
+        EndIf 
+
+        Try 
+            DGDB.DBName = args[DBName] 
+            Connect DGDB 
+            Console.WriteLine('Successful connect with Database Name {0}', args[DBName])
+        Catch ex Type(System.Exception) 
+            Console.WriteLine('** ERROR **') 
+            Console.WriteLine('   Could not connect with Database Name {0}.', args[DBName])
+            Console.WriteLIne('   Exception: {0}', ex.Message) 
+        EndTry 
+
+    EndSr 
+
+    BegSr ShowTestDBNameHelp 
+        Console.WriteLine('-------------------------------------') 
+        Console.WriteLine('Test an ASNA DataGate Database name') 
+        Console.WriteLine('-------------------------------------') 
+        Console.WriteLine('Usage:') 
+        Console.WriteLine('   WorkWithDBNames TEST DBName')  
+        Console.WriteLine('Notes:')
+        Console.WriteLine('   Nothing happens, and no error occurs, if you attempt to delete a non-existent name.')     
+        Console.WriteLine('   When deleting a public database name be sure to include the ''*Public/'' prefix.')
+    EndSr
 
     BegSr Delete Access(*Public) 
         DclSrParm args Type(*String) Rank(1) 
