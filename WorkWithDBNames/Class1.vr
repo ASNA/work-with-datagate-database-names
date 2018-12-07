@@ -1,0 +1,235 @@
+﻿Using System
+Using System.Collections
+Using System.Text
+Using System.Text.RegularExpressions
+Using System.Collections.Specialized
+
+BegClass Program
+
+	BegSr Main Shared(*Yes) Access(*Public) Attributes(System.STAThread())
+		DclSrParm args Type(*String) Rank(1)
+
+        DclFld addName Type(AddDBName) New() 
+        DclFld listNames Type(ListORDeleteDBName) New() 
+
+        If args.Length = 0 OR args[0] = '--help' OR args[0] = '?'
+            ShowMainHelp()            
+            LeaveSr     
+        EndIf 
+
+        If args[0].ToLower() = 'create' 
+            addName.Create(args)
+
+        ElseIf args[0].ToLower() = 'list'
+            listNames.List()
+
+        ElseIf args[0].ToLower() = 'delete'
+            listNames.delete(args)
+
+        EndIf 
+
+
+
+		//Console.WriteLine('Press any key to continue...') 
+		//Console.ReadKey()
+	EndSr
+
+    BegSr ShowMainHelp Shared(*Yes) 
+        Console.WriteLine('---------------') 
+        Console.WriteLine('WorkWithDBNames') 
+        Console.WriteLine('---------------') 
+        Console.WriteLine('Usage to LIST all database names:') 
+        Console.WriteLine('   WorkWithDBNames LIST')  
+        Console.WriteLine('') 
+        Console.WriteLine('Usage to CREATE a database name:') 
+        Console.WriteLine('   WorkWithDBNames CREATE DBName Server Label User Password PoolingTime') 
+        Console.WriteLine('Or') 
+        Console.WriteLine('   WorkWithDBNames CREATE --help') 
+        Console.WriteLine('') 
+        Console.WriteLine('Usage to DELETE a database name:') 
+        Console.WriteLine('   WorkWithDBNames DELETE DBName')  
+        Console.WriteLine('Or') 
+        Console.WriteLine('   WorkWithDBNames DELETE --help') 
+    EndSr
+    
+EndClass
+
+
+BegClass TestClasses
+
+	BegSr Run Access(*Public) 
+
+	EndSr
+
+EndClass
+
+BegClass ListORDeleteDBName Access(*Public) 
+
+    DclConst DBNAME Value(1) 
+
+    DclDB DGDB 
+
+    BegSr Delete Access(*Public) 
+        DclSrParm args Type(*String) Rank(1) 
+
+        If  args.Length = 1 OR args[1].ToLower() = '--help' OR args[1] = '?' 
+            ShowDeleteDBNameHelp()
+            LeaveSr 
+        EndIf 
+
+        If args.Length <> 2
+            Console.WriteLine('')
+            Console.WriteLine('** Error **')
+            Console.WriteLine('  You must call ''WorkWithDBNames Create'' with one command line argument.')
+            Console.WriteLine('')
+            LeaveSr 
+        EndIf 
+
+        DGDB.DeleteName(args[DBName]) 
+    EndSr 
+
+    BegSr ShowDeleteDBNameHelp 
+        Console.WriteLine('-------------------------------------') 
+        Console.WriteLine('Delete an ASNA DataGate Database name') 
+        Console.WriteLine('-------------------------------------') 
+        Console.WriteLine('Usage:') 
+        Console.WriteLine('   WorkWithDBNames DELETE DBName')  
+        Console.WriteLine('Notes:')
+        Console.WriteLine('   Nothing happens, and no error occurs, if you attempt to delete a non-existent name.')     
+        Console.WriteLine('   When deleting a public database name be sure to include the ''*Public/'' prefix.')
+    EndSr
+
+    BegSr List Access(*Public) 
+        DclArray DBNames Type(*String) Rank(1)
+
+        Console.WriteLine('-------------------------------------------------')
+        Console.WriteLine('Currently available database names on this server')
+        Console.WriteLine('-------------------------------------------------')
+
+        DBNames = DGDB.GetNames(*True)
+        If DBNames.Length = 0
+            Console.WriteLine('There aren''t any public database names.')
+        ElseIf DBNames.Length = 1
+            Console.WriteLine('There is 1 public database name:')
+        Else 
+            Console.WriteLine('There are {0} public database names:', DBNames.Length)
+        EndIf 
+        ForEach DBName Type(*String) Collection(DBNames) 
+            Console.WriteLine('   ' + '*Public/' + DBName)         
+        EndFor  
+        
+        DBNames = DGDB.GetNames(*False)
+        If DBNames.Length = 0
+            Console.WriteLine('There aren''t any private database names.')
+        ElseIf DBNames.Length = 1
+            Console.WriteLine('There is 1 private database name:')
+        Else 
+            Console.WriteLine('There are {0} private database names:', DBNames.Length)
+        EndIf 
+        ForEach DBName Type(*String) Collection(DBNames) 
+            Console.WriteLine('   ' + DBName)         
+        EndFor  
+
+    EndSr
+
+EndClass
+
+BegClass AddDBName Access(*Public) 
+    DclDB DGDB 
+
+    DclConst DBNAME Value(1) 
+    DclConst SERVER Value(2) 
+    DclConst LABEL Value(2) 
+    DclConst USER Value(4)
+    DclConst PASSWORD Value(5) 
+    DclConst POOLING_TIMEOUT Value(6)
+    DclConst PORT Value(7)
+    
+    DclConst ARG_COUNT_SHOULD_BE Value(8)  
+
+	BegSr Create Access(*Public) 
+        DclSrParm args Type(*String) Rank(1) 
+
+        If args.Length = 1 OR args[1].ToLower() = '--help' OR  args[1] = '?'
+            ShowAddDBNameHelp()
+            LeaveSr 
+        EndIf 
+
+        If args.Length <> ARG_COUNT_SHOULD_BE
+            ExitWithArgCountError()        
+            LeaveSr 
+        EndIf 
+
+        DGDB.PlatformAttribute = '*DATALINK'
+        DGDB.Server = args[*This.SERVER]
+        DGDB.Label = args[*This.LABEL]
+        DGDB.User = args[*This.USER]
+        DGDB.Password = args[*This.PASSWORD]
+        DGDB.PoolingTimeout = args[*This.POOLING_TIMEOUT]
+        DGDB.Port = args[*This.PORT]
+        DGDB.ServerSupport = *True 
+
+        If ValidationErrors(args) 
+            LeaveSr 
+        Else
+            Try 
+                DGDB.CreateName(args[*This.DBNAME])
+            Catch ex Type(System.Exception) 
+                Console.WriteLine('** Error **')
+                Console.WriteLine('  ' + ex.Message) 
+                Console.WriteLine(ex.Message) 
+            EndTry             
+        EndIf 
+	EndSr
+    
+    BegFunc ValidationErrors Type(*Boolean)
+		DclSrParm args Type(*String) Rank(1)
+
+        DclFld Errors Type(StringCollection) New() 
+        DclFld HasErrors Type(*Boolean) Inz(*False) 
+
+        If NOT Regex.IsMatch(args[*This.POOLING_TIMEOUT], '^\d+$') 
+            Errors.Add('>PoolingTimeout must be all digits')
+            HasErrors = *True
+        EndIf 
+
+        If NOT Regex.IsMatch(args[*This.PORT], '^\d{4}$') 
+            Errors.Add('>Port must be four digits')
+            HasErrors = *True
+        EndIf 
+
+        If HasErrors
+            Console.WriteLine('')
+            Console.WriteLine('** Error **')
+        
+            ForEach Error Type(*String) Collection(Errors) 
+                Console.WriteLine(Error) 
+            EndFor
+            Console.WriteLine('Please try again')
+        EndIf 
+        
+        LeaveSr HasErrors 
+    EndFunc
+
+    BegSr ExitWithArgCountError 
+        Console.WriteLine('')
+        Console.WriteLine('** Error **')
+        Console.WriteLine('  You must call ''WorkWithDBNames Create'' with six command line arguments.')
+        Console.WriteLine('')
+        ShowAddDBNameHelp()
+    EndSr
+
+    BegSr ShowAddDBNameHelp 
+        Console.WriteLine('-------------------------------------') 
+        Console.WriteLine('Create an ASNA DataGate Database name') 
+        Console.WriteLine('-------------------------------------') 
+        Console.WriteLine('Usage:') 
+        Console.WriteLine('   WorkWithDBNames CREATE DBName Server Label User Password PoolingTime Port')  
+        Console.WriteLine('Notes:')
+        Console.WriteLine('   Server argument can be server name or IP address') 
+        Console.WriteLine('   Label is a (very) brief descriptive name')
+        Console.WriteLine('   PoolingTime is in minutes')
+        Console.WriteLine('   Port must be four digits')    
+    EndSr
+
+EndClass 
