@@ -216,44 +216,6 @@ BegClass AddDBNameIBMi Access(*Public)
     
     DclConst ARG_COUNT_SHOULD_BE Value(8)  
 
-//    BegSr Create Access(*Public) 
-//        DclSrParm args Type(*String) Rank(1) 
-//
-//        CreateWithSourceProfile(args)
-//        LeaveSr 
-//
-//        If args.Length = 1 OR args[1].ToLower() = '--help' OR  args[1] = '?'
-//            ShowAddDBNameHelp()
-//            LeaveSr 
-//        EndIf 
-//
-//        If args.Length <> ARG_COUNT_SHOULD_BE
-//            ExitWithArgCountError()        
-//            LeaveSr 
-//        EndIf 
-//               
-//        DGDB.PlatformAttribute = '*DATALINK'
-//        DGDB.Server = args[*This.SERVER]
-//        DGDB.Label = args[*This.LABEL]
-//        DGDB.User = args[*This.USER]
-//        DGDB.Password = args[*This.PASSWORD]
-//        DGDB.PoolingTimeout = args[*This.POOLING_TIMEOUT]
-//        DGDB.Port = args[*This.PORT]
-//        DGDB.ServerSupport = *True 
-//
-//        If ValidationErrors(args) 
-//            LeaveSr 
-//        Else
-//            Try 
-//                DGDB.CreateName(args[*This.DBNAME])
-//            Catch ex Type(System.Exception) 
-//                Console.WriteLine('** Error **')
-//                Console.WriteLine('  ' + ex.Message) 
-//                Console.WriteLine(ex.Message) 
-//            EndTry             
-//        EndIf 
-//    EndSr
-
     BegSr Create Access(*Public) 
         DclSrParm args Type(*String) Rank(1) 
 

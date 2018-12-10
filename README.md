@@ -17,11 +17,12 @@ The first argument specifies the action:
     WorkWithDBNames CREATE 
     WorkWithDBNames DELETE
     WorkWithDBNames LIST
+    WorkWithDBNames SHOW
     WorkWithDBNames TEST
 
 #### To create a database name: 
 
-    WorkWithDBNames CREATE DBName Server Label User Password Pooling Port
+    WorkWithDBNames CREATE [DBName] [Server] [Label] [User] [Password] [Pooling] [Port]
     
 Notes:
 
@@ -37,7 +38,7 @@ Notes:
 
 #### To delete a database name:
 
-    WorkWithDBNames DELETE DBName 
+    WorkWithDBNames DELETE [DBName] 
     
 Notes: 
 
@@ -51,10 +52,19 @@ Notes:
 Notes:
 
 * All public and private currently configured Database Names are listed. 
+
+#### To show a database name's properties
+
+    WorkWithDBNames SHOW [DBName] 
+    
+Notes:
+
+* All public and private currently configured Database Names are listed. 
+
     
 #### To test a database name
 
-    WorkWithDBNames TEST DBName 
+    WorkWithDBNames TEST [DBName] 
     
 Notes:
 
