@@ -3,14 +3,19 @@ Using System.Collections
 Using System.Text
 Using System.Text.RegularExpressions
 Using System.Collections.Specialized
+Using ASNA.DataGate.Providers
+Using ASNA.DataGate.Common
 
 BegClass Program
 
     BegSr Main Shared(*Yes) Access(*Public) Attributes(System.STAThread())
         DclSrParm args Type(*String) Rank(1)
 
-        DclFld addName Type(AddDBName) New() 
-        DclFld listNames Type(ListORDeleteDBName) New() 
+        DclFld addName Type(AddDBNameIBMi) New() 
+        DclFld general Type(GeneralDBNameOperations) New() 
+
+        //args = *New String[] {"CREATE", "*Public/rogerp", "cypress", "ibm", "shakey", "roger", "20", "5150"}
+        //args = *New String[] {"SHOW", "*Public/rogerp"}
 
         If args.Length = 0 OR args[0] = '--help' OR args[0] = '?'
             ShowMainHelp()            
@@ -21,13 +26,16 @@ BegClass Program
             addName.Create(args)
 
         ElseIf args[0].ToLower() = 'list'
-            listNames.List()
+            general.List()
 
         ElseIf args[0].ToLower() = 'delete'
-            listNames.delete(args)
+            general.delete(args)
+
+        ElseIf args[0].ToLower() = 'show'
+            general.show(args)
 
         ElseIf args[0].ToLower() = 'test'
-            listNames.test(args)
+            general.test(args)
 
         EndIf 
     EndSr
@@ -39,18 +47,21 @@ BegClass Program
         Console.WriteLine('Usage to LIST all database names:') 
         Console.WriteLine('   WorkWithDBNames LIST')  
         Console.WriteLine('') 
+        Console.WriteLine('Usage to SHOW a database name''s properties:') 
+        Console.WriteLine('   WorkWithDBNames SHOW [DBName]')  
+        Console.WriteLine('') 
         Console.WriteLine('Usage to CREATE a database name:') 
-        Console.WriteLine('   WorkWithDBNames CREATE DBName Server Label User Password PoolingTime Port') 
+        Console.WriteLine('   WorkWithDBNames CREATE [DBName] [Server] [Label] [User] [Password] [PoolingTime] [Port]') 
         Console.WriteLine('Or') 
         Console.WriteLine('   WorkWithDBNames CREATE --help') 
         Console.WriteLine('') 
         Console.WriteLine('Usage to DELETE a database name:') 
-        Console.WriteLine('   WorkWithDBNames DELETE DBName')  
+        Console.WriteLine('   WorkWithDBNames DELETE [DBName]')  
         Console.WriteLine('Or') 
         Console.WriteLine('   WorkWithDBNames DELETE --help') 
         Console.WriteLine('') 
         Console.WriteLine('Usage to TEST a database name:') 
-        Console.WriteLine('   WorkWithDBNames TEST DBName')  
+        Console.WriteLine('   WorkWithDBNames TEST [DBName]')  
     EndSr
     
 EndClass
@@ -64,11 +75,15 @@ BegClass TestClasses
 
 EndClass
 
-BegClass ListORDeleteDBName Access(*Public) 
+BegClass GeneralDBNameOperations Access(*Public) 
 
     DclConst DBNAME Value(1) 
 
     DclDB DGDB 
+
+    BegSr Show 
+
+    EndSr 
 
     BegSr Test Access(*Public) 
         DclSrParm args Type(*String) Rank(1) 
@@ -101,6 +116,30 @@ BegClass ListORDeleteDBName Access(*Public)
         Console.WriteLine('   When deleting a public database name be sure to include the ''*Public/'' prefix.')
     EndSr
 
+    BegSr Show Access(*Public) 
+        DclSrParm args Type(*String) Rank(1) 
+        
+        DclFld sp Type(SourceProfile) 
+
+        sp = *New SourceProfile(args[*This.DBName])
+
+        Console.WriteLine("Database name..........{0}", sp.DatabaseName) 
+        Console.WriteLine("Server.................{0}", sp.Server) 
+        Console.WriteLine("Platform...............{0}", sp.PlatformAttribute)
+        Console.WriteLine("Label..................{0}", sp.Label) 
+        Console.WriteLine("User...................{0}", sp.User) 
+        Console.WriteLine("Password...............{0}", "**Not viewable**") 
+        If sp.PasswordType = PasswordType.SecurePassPhrase
+            Console.WriteLine("Password type..........{0}", "Secure") 
+        Else
+            Console.WriteLine("Password type..........{0}", "Legacy") 
+        EndIf 
+        Console.WriteLine("Pooling timeout........{0}", sp.PoolingTimeout) 
+        Console.WriteLine("Port...................{0}", sp.Port)  
+
+        Test(args)
+    EndSr 
+
     BegSr Delete Access(*Public) 
         DclSrParm args Type(*String) Rank(1) 
 
@@ -117,7 +156,7 @@ BegClass ListORDeleteDBName Access(*Public)
             LeaveSr 
         EndIf 
 
-        DGDB.DeleteName(args[DBName]) 
+        DGDB.DeleteName(args[*This.DBName]) 
     EndSr 
 
     BegSr ShowDeleteDBNameHelp 
@@ -166,18 +205,54 @@ BegClass ListORDeleteDBName Access(*Public)
 
 EndClass
 
-BegClass AddDBName Access(*Public) 
-    DclDB DGDB 
-
+BegClass AddDBNameIBMi Access(*Public) 
     DclConst DBNAME Value(1) 
     DclConst SERVER Value(2) 
-    DclConst LABEL Value(2) 
+    DclConst LABEL Value(3) 
     DclConst USER Value(4)
     DclConst PASSWORD Value(5) 
     DclConst POOLING_TIMEOUT Value(6)
     DclConst PORT Value(7)
     
     DclConst ARG_COUNT_SHOULD_BE Value(8)  
+
+//    BegSr Create Access(*Public) 
+//        DclSrParm args Type(*String) Rank(1) 
+//
+//        CreateWithSourceProfile(args)
+//        LeaveSr 
+//
+//        If args.Length = 1 OR args[1].ToLower() = '--help' OR  args[1] = '?'
+//            ShowAddDBNameHelp()
+//            LeaveSr 
+//        EndIf 
+//
+//        If args.Length <> ARG_COUNT_SHOULD_BE
+//            ExitWithArgCountError()        
+//            LeaveSr 
+//        EndIf 
+//               
+//        DGDB.PlatformAttribute = '*DATALINK'
+//        DGDB.Server = args[*This.SERVER]
+//        DGDB.Label = args[*This.LABEL]
+//        DGDB.User = args[*This.USER]
+//        DGDB.Password = args[*This.PASSWORD]
+//        DGDB.PoolingTimeout = args[*This.POOLING_TIMEOUT]
+//        DGDB.Port = args[*This.PORT]
+//        DGDB.ServerSupport = *True 
+//
+//        If ValidationErrors(args) 
+//            LeaveSr 
+//        Else
+//            Try 
+//                DGDB.CreateName(args[*This.DBNAME])
+//            Catch ex Type(System.Exception) 
+//                Console.WriteLine('** Error **')
+//                Console.WriteLine('  ' + ex.Message) 
+//                Console.WriteLine(ex.Message) 
+//            EndTry             
+//        EndIf 
+//    EndSr
 
     BegSr Create Access(*Public) 
         DclSrParm args Type(*String) Rank(1) 
@@ -192,20 +267,24 @@ BegClass AddDBName Access(*Public)
             LeaveSr 
         EndIf 
 
-        DGDB.PlatformAttribute = '*DATALINK'
-        DGDB.Server = args[*This.SERVER]
-        DGDB.Label = args[*This.LABEL]
-        DGDB.User = args[*This.USER]
-        DGDB.Password = args[*This.PASSWORD]
-        DGDB.PoolingTimeout = args[*This.POOLING_TIMEOUT]
-        DGDB.Port = args[*This.PORT]
-        DGDB.ServerSupport = *True 
+        DclFld sp Type(SourceProfile) 
+
+        sp = *New SourceProfile()
+
+        sp.PlatformAttribute = '*DATALINK'
+        sp.Server = args[*This.SERVER]
+        sp.Label = args[*This.LABEL]
+        sp.User = args[*This.USER]
+        sp.Password = args[*This.PASSWORD]
+        sp.PoolingTimeout = args[*This.POOLING_TIMEOUT]
+        sp.Port = args[*This.PORT]
+        sp.PasswordType = PasswordType.SecurePassPhrase
 
         If ValidationErrors(args) 
             LeaveSr 
         Else
             Try 
-                DGDB.CreateName(args[*This.DBNAME])
+                DatabaseName.Register(sp, args[*This.DBNAME])
             Catch ex Type(System.Exception) 
                 Console.WriteLine('** Error **')
                 Console.WriteLine('  ' + ex.Message) 
@@ -213,6 +292,7 @@ BegClass AddDBName Access(*Public)
             EndTry             
         EndIf 
     EndSr
+
     
     BegFunc ValidationErrors Type(*Boolean)
         DclSrParm args Type(*String) Rank(1)
